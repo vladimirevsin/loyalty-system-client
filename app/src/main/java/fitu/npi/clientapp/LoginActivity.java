@@ -5,6 +5,7 @@ import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.app.ActionBar;
 import android.app.AlertDialog;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
@@ -21,6 +22,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -31,6 +33,20 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.RetryPolicy;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -94,6 +110,25 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
+
+        Intent intent = getIntent();
+
+        String regStatus = intent.getStringExtra("regStatus");
+
+        if(regStatus != null && !regStatus.isEmpty())
+        {
+           boolean status = Boolean.parseBoolean(regStatus);
+
+           if(status)
+           {
+               AlertDialog.Builder dlgAlert = new AlertDialog.Builder(this);
+               dlgAlert.setMessage("Вы зарегистрированы, теперь вы можете войти с помощью своих данных");
+               dlgAlert.setTitle("Удача!");
+               dlgAlert.setPositiveButton("OK", null);
+               dlgAlert.setCancelable(true);
+               dlgAlert.create().show();
+           }
+        }
     }
 
     private void populateAutoComplete() {
@@ -194,7 +229,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
     private boolean isEmailValid(String email) {
         //TODO: Replace this with your own logic
-        return email.contains("@");
+        return true;//email.contains("@");
     }
 
     private boolean isPasswordValid(String password) {
@@ -285,10 +320,38 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         TextView textViewLogin = findViewById(R.id.editTextLogin);
         TextView textViewPassword = findViewById(R.id.editTextPassword);
 
+        if (textViewLogin.getText().toString().equals("TSC") && textViewPassword.getText().toString().equals("123")) {
+            try {
+                boolean result = _searchClient(textViewLogin.getText().toString(), textViewPassword.getText().toString());
 
-        if (textViewLogin.getText().toString() == "TSC" && textViewPassword.getText().toString() == "123") {
+                if(result)
+                {
+                    Intent intent = new Intent(this, TSCMainActivity.class);
+                    intent.putExtra("login", textViewLogin.toString());
+                    startActivity(intent);
+                }
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
             setContentView(R.layout.tsc_main);
-        } else if (textViewLogin.getText().toString() == "TSC" && textViewPassword.getText().toString() == "123") {
+        } else if (textViewLogin.getText().toString().equals("USER") && textViewPassword.getText().toString().equals("123")) {
+            boolean result = false;
+            try {
+                result = _searchClient(textViewLogin.getText().toString(), textViewPassword.getText().toString());
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            if(result)
+            {
+                Intent intent = new Intent(this, ClientActivity.class);
+                intent.putExtra("login", textViewLogin.toString());
+                startActivity(intent);
+            }
 
         } else {
             AlertDialog.Builder dlgAlert  = new AlertDialog.Builder(this);
@@ -301,8 +364,63 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     }
 
     public void register(View view) {
+        Intent intent = new Intent(this, RegActivity.class);
+        startActivity(intent);
     }
 
+    private boolean _searchClient(String phoneNumber, String password) throws JsonProcessingException, JSONException {
+        final boolean[] result = {false};
+        final ObjectMapper mapper = new ObjectMapper();
+
+        RequestQueue requestQueue = Volley.newRequestQueue(this);
+        String addString = "/search_client?phoneNumber=" + phoneNumber.replace(' ', '+') +
+                "&password=" + password;
+
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(
+                Request.Method.GET,
+                Settings.URL.concat(addString),
+                null,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            result[0] = mapper.readValue(response.toString(), boolean.class);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                },
+
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.e("Rest responce", error.toString());
+                        result[0] = false;
+                    }
+                }
+        );
+
+        jsonObjectRequest.setRetryPolicy(new RetryPolicy() {
+            @Override
+            public int getCurrentTimeout() {
+                return 150000;
+            }
+
+            @Override
+            public int getCurrentRetryCount() {
+                return 150000;
+            }
+
+            @Override
+            public void retry(VolleyError error) throws VolleyError {
+
+            }
+        });
+        jsonObjectRequest.setShouldCache(false);
+        requestQueue.add(jsonObjectRequest);
+
+        return result[0];
+    }
 
     private interface ProfileQuery {
         String[] PROJECTION = {

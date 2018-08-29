@@ -56,8 +56,8 @@
                     android:layout_weight="1"
                     android:background="@color/colorPrimary"
                     android:elevation="0dp"
-                    android:text="Начислить Баллы"
-                    android:onClick="addBalls"/>
+                    android:onClick="buttonAddBallsClick"
+                    android:text="Начислить Баллы" />
 
                 <Button
                     android:id="@+id/buttonDescBalls"
@@ -66,7 +66,8 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:background="@android:color/holo_red_dark"
-                    android:text="Снять баллы" />
+                    android:text="Снять баллы"
+                    android:onClick="buttonDestBallsClick"/>
             </LinearLayout>
 
             <LinearLayout

@@ -78,8 +78,8 @@
                 android:id="@+id/buttonRegUser"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Зарегистрироваться"
-                android:onClick="register" />
+                android:onClick="register"
+                android:text="Зарегистрироваться" />
 
         </LinearLayout>
     </ScrollView>

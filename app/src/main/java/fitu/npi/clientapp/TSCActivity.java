@@ -1,10 +1,12 @@
 package fitu.npi.clientapp;
 
 import android.app.AlertDialog;
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.android.volley.Request;
@@ -45,14 +47,20 @@ public class TSCActivity extends AppCompatActivity {
         TextView textViewLogin = findViewById(R.id.editTextLogin);
         TextView textViewPassword = findViewById(R.id.editTextPassword);
 
-
         try {
             if (textViewLogin.getText().toString().equals("TSC") && textViewPassword.getText().toString().equals("123")) {
                 setContentView(R.layout.tsc_main);
             } else {
-                boolean result = _searchClient(textViewLogin.getText().toString(), textViewPassword.getText().toString());
-                if (result) {
+                boolean result = true;//_searchClient(textViewLogin.getText().toString(), textViewPassword.getText().toString());
 
+                if (result) {
+//                    Intent intent = new Intent(this, TSCMainActivity.class);
+//                    intent.putExtra("login", textViewLogin.toString());
+//                    startActivity(intent);
+
+                    Intent intent = new Intent(this, TSCMainActivity.class);
+                    intent.putExtra("login", textViewLogin.toString());
+                    startActivity(intent);
                 } else {
                     AlertDialog.Builder dlgAlert = new AlertDialog.Builder(this);
                     dlgAlert.setMessage("Вы не идентифицированы");
@@ -67,11 +75,11 @@ public class TSCActivity extends AppCompatActivity {
         }
     }
 
-    public void register(View view) {
+    public void registerW(View view) {
+        setContentView(R.layout.activity_reg);
     }
 
-
-    private void addBalls(View view) throws JsonProcessingException, JSONException {
+    public void addBalls(View view) throws JsonProcessingException, JSONException {
         TextView editTextPhone = (TextView) findViewById(R.id.editTextPhone);
         TextView editTextSumPay = (TextView) findViewById(R.id.editTextSumPay);
 
@@ -136,7 +144,7 @@ public class TSCActivity extends AppCompatActivity {
         final ObjectMapper mapper = new ObjectMapper();
 
         RequestQueue requestQueue = Volley.newRequestQueue(this);
-        String addString = "/reg_wallet?phoneNumber=" + phoneNumber +
+        String addString = "/reg_wallet?phoneNumber=" + phoneNumber.replace(' ', '+') +
                 "&marker=" + marker;
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(
@@ -187,7 +195,7 @@ public class TSCActivity extends AppCompatActivity {
         final ObjectMapper mapper = new ObjectMapper();
 
         RequestQueue requestQueue = Volley.newRequestQueue(this);
-        String addString = "/get_balance?phoneNumber=" + phoneNumber +
+        String addString = "/get_balance?phoneNumber=" + phoneNumber.replace(' ', '+') +
                 "&marker=" + marker;
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(
